@@ -2,7 +2,7 @@ name: Coupon Publisher
 
 on:
   schedule:
-    - cron: '0 8 * * *'  # 8AM UTC = 9AM توقيت الجزائر
+    - cron: '0 21 * * *'  # 9PM UTC = 10PM التوقيت الجزائري (UTC+1)
   workflow_dispatch:
 
 jobs:
@@ -19,7 +19,9 @@ jobs:
           python-version: '3.11'
           
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip install pytz
           
       - name: Run Bot
         env:
