@@ -1,0 +1,37 @@
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
+# إعداد الاتصال
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+credentials_json = '{"type": "service_account", "project_id": "your_project_id", ...}'  # ستقوم بإدخال محتوى GCP_CREDS هنا
+credentials = ServiceAccountCredentials.from_json_keyfile_dict(credentials_json, scope)
+client = gspread.authorize(credentials)
+
+# فتح ملف Google Sheets باستخدام اسمه
+spreadsheet = client.open("coupons")  # اسم الملف هو coupons
+
+# اختيار الورقة الأولى
+sheet = spreadsheet.sheet1
+
+# قراءة البيانات من الشيت
+coupon_data = sheet.get_all_records()
+
+# طباعة بيانات الكوبونات
+for coupon in coupon_data:
+    title = coupon['title']
+    description = coupon['description']
+    code = coupon['code']
+    link = coupon['link']
+    image = coupon['image']
+    countries = coupon['countries']
+    note = coupon['note']
+
+    # طباعة البيانات لتأكيد
+    print(f"Title: {title}")
+    print(f"Description: {description}")
+    print(f"Coupon Code: {code}")
+    print(f"Purchase Link: {link}")
+    print(f"Image URL: {image}")
+    print(f"Supported Countries: {countries}")
+    print(f"Note: {note}")
+    print("-" * 40)
