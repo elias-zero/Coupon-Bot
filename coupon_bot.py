@@ -9,18 +9,15 @@ from oauth2client.service_account import ServiceAccountCredentials
 # إعدادات الثوابت
 MAX_DAILY = 20
 DELAY_HOURS = 1
-START_DATE = datetime(2024, 1, 1)  # تاريخ بدء التشغيل
+START_DATE = datetime(2024, 1, 1)
 
-# تهيئة البيانات
-GCP_CREDS = json.loads(os.getenv('GCP_CREDS'))
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-CHANNEL_ID = os.getenv('TELEGRAM_CHANNEL_ID')
-
-# إعداد اتصال Google Sheets
+# إعداد النطاق المعدل
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive.file"  # ← التعديل هنا
 ]
+
+# باقي الكود بدون تغيير ...
 
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(GCP_CREDS, scope)
 client = gspread.authorize(credentials)
