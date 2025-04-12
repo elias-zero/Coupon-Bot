@@ -11,12 +11,25 @@ GCP_CREDS = json.loads(os.getenv('GCP_CREDS'))
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHANNEL_ID = os.getenv('CHANNEL_ID')
 
+# إعداد نطاق الصلاحيات الجديد
+scope = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive.metadata.readonly"
+]
+
 # إعداد اتصال Google Sheets
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(
     GCP_CREDS,
-    ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    scope
 )
 client = gspread.authorize(credentials)
+
+# اختبار الاتصال - المضافة الجديدة
+try:
+    test_sheet = client.open("coupons")
+    print(f"تم الاتصال بنجاح! ID الملف: {test_sheet.id}")
+except Exception as e:
+    print(f"فشل في الاتصال: {e}")
 
 # تهيئة بوت التليجرام
 bot = Bot(token=TELEGRAM_TOKEN)
@@ -65,9 +78,9 @@ def publish_all_coupons():
     coupons = fetch_coupons()
     for idx, coupon in enumerate(coupons, 1):
         send_coupon(coupon)
-        if idx < len(coupons):  # تأخير 10 ثواني بين الإرسالات ما عدا الأخير
+        if idx < len(coupons):
             time.sleep(10)
     print(f"تم نشر جميع الكوبونات ({len(coupons)} منشور)")
 
 if __name__ == "__main__":
-    publish_all_coupons()  # التشغيل الفوري بدون جدولة
+    publish_all_coupons()
