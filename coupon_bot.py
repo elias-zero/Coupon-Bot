@@ -6,53 +6,56 @@ from telegram import Bot, InputMediaPhoto
 from telegram.error import TelegramError
 from oauth2client.service_account import ServiceAccountCredentials
 
-# تهيئة بيانات الاعتماد من متغيرات البيئة
 GCP_CREDS = json.loads(os.getenv('GCP_CREDS'))
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHANNEL_ID = os.getenv('CHANNEL_ID')
 
-# إعداد نطاق الصلاحيات الجديد
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive.metadata.readonly"
 ]
 
-# إعداد اتصال Google Sheets
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(
     GCP_CREDS,
     scope
 )
 client = gspread.authorize(credentials)
 
-# اختبار الاتصال - المضافة الجديدة
 try:
-    test_sheet = client.open("coupons")
-    print(f"تم الاتصال بنجاح! ID الملف: {test_sheet.id}")
+    test_sheet = client.open("Coupons")
+    print(f"تم الاتصال بنجاح! ID: {test_sheet.id}")
+    print(f"الأوراق المتاحة: {[ws.title for ws in test_sheet.worksheets()]}")
 except Exception as e:
-    print(f"فشل في الاتصال: {e}")
+    print(f"فشل الاتصال: {str(e)}")
+    raise
 
-# تهيئة بوت التليجرام
 bot = Bot(token=TELEGRAM_TOKEN)
 
 def fetch_coupons():
-    """جلب بيانات الكوبونات من الجدول"""
     try:
-        spreadsheet = client.open("coupons")
+        spreadsheet = client.open("Coupons")
         sheet = spreadsheet.sheet1
-        return sheet.get_all_records()
+        
+        headers = sheet.row_values(1)
+        required = ['title','description','code','link','image','countries','note']
+        if headers != required:
+            raise ValueError(f"العناوين خاطئة\nالمطلوب: {required}\nالموجود: {headers}")
+            
+        data = sheet.get_all_records()
+        print(f"تم جلب {len(data)} كوبون")
+        return data
     except Exception as e:
-        print(f"خطأ في قراءة البيانات: {e}")
-        return []
+        print(f"خطأ: {str(e)}")
+        raise
 
 def send_coupon(coupon):
-    """إرسال كوبون واحد إلى القناة"""
     try:
-        message = (
-            f"🎁 **{coupon['title']}** 🎁\n\n"
-            f"{coupon['description']}\n\n"
+        msg = (
+            f"🎁 **{coupon['title']}**\n\n"
+            f"{coupon['description']}\n"
             f"🔐 الكود: `{coupon['code']}`\n"
             f"🌍 الدول: {coupon['countries']}\n"
-            f"📌 ملاحظة: {coupon.get('note', '')}\n"
+            f"📌 ملاحظة: {coupon.get('note','')}\n"
             f"🛒 [رابط الشراء]({coupon['link']})"
         )
         
@@ -60,27 +63,26 @@ def send_coupon(coupon):
             bot.send_photo(
                 chat_id=CHANNEL_ID,
                 photo=coupon['image'],
-                caption=message,
+                caption=msg,
                 parse_mode='Markdown'
             )
         else:
             bot.send_message(
                 chat_id=CHANNEL_ID,
-                text=message,
+                text=msg,
                 parse_mode='Markdown'
             )
-        print(f"تم إرسال الكوبون: {coupon['title']}")
-    except TelegramError as e:
-        print(f"خطأ في الإرسال: {e}")
+        print(f"تم إرسال: {coupon['title']}")
+    except Exception as e:
+        print(f"فشل إرسال {coupon['title']}: {str(e)}")
 
-def publish_all_coupons():
-    """نشر جميع الكوبونات دفعة واحدة"""
+def publish_all():
     coupons = fetch_coupons()
-    for idx, coupon in enumerate(coupons, 1):
-        send_coupon(coupon)
+    for idx, c in enumerate(coupons, 1):
+        send_coupon(c)
         if idx < len(coupons):
             time.sleep(10)
-    print(f"تم نشر جميع الكوبونات ({len(coupons)} منشور)")
+    print(f"تم النشر: {len(coupons)} كوبون")
 
 if __name__ == "__main__":
-    publish_all_coupons()
+    publish_all()
