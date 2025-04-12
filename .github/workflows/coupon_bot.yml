@@ -2,8 +2,8 @@ name: Coupon Publisher
 
 on:
   schedule:
-    - cron: '0 9 * * *'  # 9AM UTC
-  workflow_dispatch:
+    - cron: '0 9 * * *'  # التشغيل التلقائي اليومي الساعة 9AM UTC
+  workflow_dispatch:      # التشغيل اليدوي الفوري
 
 jobs:
   publish:
