@@ -17,7 +17,11 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHANNEL_ID = os.getenv('TELEGRAM_CHANNEL_ID')
 
 # إعداد اتصال Google Sheets
-scope = ["https://www.googleapis.com/auth/spreadsheets"]
+scope = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive.file"  # ← التعديل هنا
+]
+
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(GCP_CREDS, scope)
 client = gspread.authorize(credentials)
 bot = Bot(token=TELEGRAM_TOKEN)
