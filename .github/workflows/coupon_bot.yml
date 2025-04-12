@@ -1,37 +1,29 @@
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+name: Coupon Publisher
 
-# إعداد الاتصال
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-credentials_json = '{"type": "service_account", "project_id": "your_project_id", ...}'  # ستقوم بإدخال محتوى GCP_CREDS هنا
-credentials = ServiceAccountCredentials.from_json_keyfile_dict(credentials_json, scope)
-client = gspread.authorize(credentials)
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 9AM UTC
+  workflow_dispatch:
 
-# فتح ملف Google Sheets باستخدام اسمه
-spreadsheet = client.open("coupons")  # اسم الملف هو coupons
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: production
 
-# اختيار الورقة الأولى
-sheet = spreadsheet.sheet1
-
-# قراءة البيانات من الشيت
-coupon_data = sheet.get_all_records()
-
-# طباعة بيانات الكوبونات
-for coupon in coupon_data:
-    title = coupon['title']
-    description = coupon['description']
-    code = coupon['code']
-    link = coupon['link']
-    image = coupon['image']
-    countries = coupon['countries']
-    note = coupon['note']
-
-    # طباعة البيانات لتأكيد
-    print(f"Title: {title}")
-    print(f"Description: {description}")
-    print(f"Coupon Code: {code}")
-    print(f"Purchase Link: {link}")
-    print(f"Image URL: {image}")
-    print(f"Supported Countries: {countries}")
-    print(f"Note: {note}")
-    print("-" * 40)
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+          
+      - name: Run Bot
+        env:
+          GCP_CREDS: ${{ secrets.GCP_CREDS }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        run: python coupon_bot.py
