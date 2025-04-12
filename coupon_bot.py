@@ -2,7 +2,6 @@ import gspread
 import os
 import json
 import time
-import schedule
 from telegram import Bot, InputMediaPhoto
 from telegram.error import TelegramError
 from oauth2client.service_account import ServiceAccountCredentials
@@ -61,20 +60,14 @@ def send_coupon(coupon):
     except TelegramError as e:
         print(f"خطأ في الإرسال: {e}")
 
-def daily_job():
-    """مهمة النشر اليومية"""
+def publish_all_coupons():
+    """نشر جميع الكوبونات دفعة واحدة"""
     coupons = fetch_coupons()
-    for coupon in coupons:
+    for idx, coupon in enumerate(coupons, 1):
         send_coupon(coupon)
-        time.sleep(10)  # تأخير 10 ثواني بين الإرسالات
+        if idx < len(coupons):  # تأخير 10 ثواني بين الإرسالات ما عدا الأخير
+            time.sleep(10)
+    print(f"تم نشر جميع الكوبونات ({len(coupons)} منشور)")
 
 if __name__ == "__main__":
-    # تشغيل المهمة فورًا
-    daily_job()
-    
-    # جدولة التشغيل اليومي
-    schedule.every().day.at("09:00").do(daily_job)  # 9AM UTC = 12PM توقيت السعودية
-    
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
+    publish_all_coupons()  # التشغيل الفوري بدون جدولة
