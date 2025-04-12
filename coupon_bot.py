@@ -47,29 +47,46 @@ async def fetch_coupons():
 async def send_coupon(coupon):
     """إرسال كوبون واحد"""
     try:
-        msg = (
-            f"🎁 **{coupon['title']}**\n\n"
+        # بناء الرسالة الجديدة
+        message_lines = [
+            f"**{coupon['title']}**",
             f"{coupon['description']}\n"
-            f"🔐 الكود: `{coupon['code']}`\n"
-            f"🌍 الدول: {coupon['countries']}\n"
-            f"📌 ملاحظة: {coupon.get('note','')}\n"
-            f"🛒 [رابط الشراء]({coupon['link']})"
-        )
+        ]
+        
+        # إضافة العناصر الأساسية
+        message_lines.append(f"الكوبون: `{coupon['code']}`")
+        
+        if coupon.get('countries'):
+            message_lines.append(f"صالح لـ: {coupon['countries']}")
+            
+        if coupon.get('note'):
+            message_lines.append(f"ملاحظة: {coupon['note']}")
+        
+        # رابط الشراء
+        message_lines.append(f"رابط الشراء: [اضغط هنا]({coupon['link']})\n")
+        
+        # الرابط الثابت
+        message_lines.append("لمزيد من الكوبونات قم بزيارة موقعنا:\nhttps://www.discountcoupon.online")
+        
+        # دمج كل السطور
+        full_message = "\n".join(message_lines)
         
         if coupon.get('image'):
             await bot.send_photo(
                 chat_id=CHANNEL_ID,
                 photo=coupon['image'],
-                caption=msg,
+                caption=full_message,
                 parse_mode='Markdown'
             )
         else:
             await bot.send_message(
                 chat_id=CHANNEL_ID,
-                text=msg,
+                text=full_message,
                 parse_mode='Markdown'
             )
+            
         print(f"تم الإرسال: {coupon['title']}")
+        
     except Exception as e:
         print(f"فشل إرسال {coupon['title']}: {str(e)}")
 
