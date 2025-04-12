@@ -2,7 +2,7 @@ name: Coupon Publisher
 
 on:
   schedule:
-    - cron: '0 9 * * *'  # 9AM UTC
+    - cron: '0 8 * * *'  # 8AM UTC = 9AM توقيت الجزائر
   workflow_dispatch:
 
 jobs:
@@ -20,18 +20,6 @@ jobs:
           
       - name: Install dependencies
         run: pip install -r requirements.txt
-
-      - name: Debug Sheet Connection
-        run: |
-          python -c "import gspread; from oauth2client.service_account import ServiceAccountCredentials; import json; import os; \
-          creds = json.loads(os.getenv('GCP_CREDS')); \
-          scope = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.metadata.readonly']; \
-          credentials = ServiceAccountCredentials.from_json_keyfile_dict(creds, scope); \
-          client = gspread.authorize(credentials); \
-          print('الحساب المرتبط:', credentials.service_account_email); \
-          print('الملفات المتاحة:', client.list_spreadsheet_files())"
-        env:
-          GCP_CREDS: ${{ secrets.GCP_CREDS }}
           
       - name: Run Bot
         env:
