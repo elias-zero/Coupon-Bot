@@ -54,19 +54,19 @@ async def send_coupon(coupon):
         ]
         
         # إضافة العناصر الأساسية
-        message_lines.append(f"الكوبون: `{coupon['code']}`")
+        message_lines.append(f"الكوبون : `{coupon['code']}`")
         
         if coupon.get('countries'):
-            message_lines.append(f"صالح لـ: {coupon['countries']}")
+            message_lines.append(f"صالح لـ : {coupon['countries']}")
             
         if coupon.get('note'):
-            message_lines.append(f"ملاحظة: {coupon['note']}")
+            message_lines.append(f"ملاحظة : {coupon['note']}")
         
         # رابط الشراء
-        message_lines.append(f"رابط الشراء: [اضغط هنا]({coupon['link']})\n")
+        message_lines.append(f"رابط الشراء : [اضغط هنا]({coupon['link']})\n")
         
         # الرابط الثابت
-        message_lines.append("لمزيد من الكوبونات قم بزيارة موقعنا:\nhttps://www.discountcoupon.online")
+        message_lines.append("لمزيد من الكوبونات قم بزيارة موقعنا :\nhttps://www.discountcoupon.online")
         
         # دمج كل السطور
         full_message = "\n".join(message_lines)
