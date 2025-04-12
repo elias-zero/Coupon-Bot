@@ -66,7 +66,7 @@ async def send_coupon(coupon):
         message_lines.append(f"رابط الشراء : [اضغط هنا]({coupon['link']})\n")
         
         # الرابط الثابت
-        message_lines.append("لمزيد من الكوبونات قم بزيارة موقعنا :\nhttps://www.discountcoupon.online")
+        message_lines.append("لمزيد من الكوبونات قم بزيارة موقعنا :\n\nhttps://www.discountcoupon.online")
         
         # دمج كل السطور
         full_message = "\n".join(message_lines)
