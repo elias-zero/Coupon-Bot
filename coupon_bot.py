@@ -2,14 +2,17 @@ import gspread
 import os
 import json
 import time
+import asyncio
 from telegram import Bot, InputMediaPhoto
 from telegram.error import TelegramError
 from oauth2client.service_account import ServiceAccountCredentials
 
+# تهيئة بيانات الاعتماد
 GCP_CREDS = json.loads(os.getenv('GCP_CREDS'))
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHANNEL_ID = os.getenv('CHANNEL_ID')
 
+# إعداد اتصال Google Sheets
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive.metadata.readonly"
@@ -21,34 +24,28 @@ credentials = ServiceAccountCredentials.from_json_keyfile_dict(
 )
 client = gspread.authorize(credentials)
 
-try:
-    test_sheet = client.open("Coupons")
-    print(f"تم الاتصال بنجاح! ID: {test_sheet.id}")
-    print(f"الأوراق المتاحة: {[ws.title for ws in test_sheet.worksheets()]}")
-except Exception as e:
-    print(f"فشل الاتصال: {str(e)}")
-    raise
-
+# تهيئة البوت بشكل صحيح
 bot = Bot(token=TELEGRAM_TOKEN)
 
-def fetch_coupons():
+async def fetch_coupons():
+    """جلب البيانات من الجدول"""
     try:
         spreadsheet = client.open("Coupons")
         sheet = spreadsheet.sheet1
         
+        # التحقق من العناوين
         headers = sheet.row_values(1)
         required = ['title','description','code','link','image','countries','note']
         if headers != required:
-            raise ValueError(f"العناوين خاطئة\nالمطلوب: {required}\nالموجود: {headers}")
+            raise ValueError(f"خطأ في العناوين!\nالمطلوب: {required}\nالموجود: {headers}")
             
-        data = sheet.get_all_records()
-        print(f"تم جلب {len(data)} كوبون")
-        return data
+        return sheet.get_all_records()
     except Exception as e:
-        print(f"خطأ: {str(e)}")
+        print(f"خطأ في قراءة البيانات: {str(e)}")
         raise
 
-def send_coupon(coupon):
+async def send_coupon(coupon):
+    """إرسال كوبون واحد"""
     try:
         msg = (
             f"🎁 **{coupon['title']}**\n\n"
@@ -60,29 +57,34 @@ def send_coupon(coupon):
         )
         
         if coupon.get('image'):
-            bot.send_photo(
+            await bot.send_photo(
                 chat_id=CHANNEL_ID,
                 photo=coupon['image'],
                 caption=msg,
                 parse_mode='Markdown'
             )
         else:
-            bot.send_message(
+            await bot.send_message(
                 chat_id=CHANNEL_ID,
                 text=msg,
                 parse_mode='Markdown'
             )
-        print(f"تم إرسال: {coupon['title']}")
+        print(f"تم الإرسال: {coupon['title']}")
     except Exception as e:
         print(f"فشل إرسال {coupon['title']}: {str(e)}")
 
-def publish_all():
-    coupons = fetch_coupons()
-    for idx, c in enumerate(coupons, 1):
-        send_coupon(c)
-        if idx < len(coupons):
-            time.sleep(10)
-    print(f"تم النشر: {len(coupons)} كوبون")
+async def publish_all():
+    """النشر الرئيسي"""
+    try:
+        coupons = await fetch_coupons()
+        for idx, coupon in enumerate(coupons, 1):
+            await send_coupon(coupon)
+            if idx < len(coupons):
+                await asyncio.sleep(10)  # تأخير بين الإرسالات
+        print(f"تم نشر {len(coupons)} كوبون بنجاح")
+    except Exception as e:
+        print(f"فشل النشر: {str(e)}")
 
 if __name__ == "__main__":
-    publish_all()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(publish_all())
